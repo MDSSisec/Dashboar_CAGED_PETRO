@@ -170,7 +170,9 @@ function render(){
     `<div><span class="dot" style="background:${s.color}"></span>${s.label} — <b>&nbsp;${fmt(s.value)}</b>&nbsp;(${pct(s.value,total)}%)</div>`).join('');
 
   hbars(document.getElementById('c_parceiro'), topRows(countBy(rows,'parceiro'),8), BRAND, total);
-  hbars(document.getElementById('c_status'), topRows(countBy(rows,'status_mat'),8), '#3C7C74', total);
+  const statusCounts=countBy(rows,'status_mat'); delete statusCounts['Matriculado'];
+  const statusEntries=[['Matriculado', total], ...topRows(statusCounts,7)];
+  hbars(document.getElementById('c_status'), statusEntries, '#3C7C74', total);
   hbars(document.getElementById('c_campus'), topRows(countBy(rows,'campus'),8), '#2E6E67', total);
   hbars(document.getElementById('c_beneficio'), [
       ['CadÚnico: SIM', cad],['CadÚnico: NÃO', total-cad],
@@ -195,7 +197,10 @@ const defs=[['parceiro','Parceiro'],['campus','Campus'],['caged','Situação CAG
 const fc=document.getElementById('filters');
 defs.forEach(([key,label])=>{
   const wrap=document.createElement('div');wrap.className='field';
-  const opts=['<option value="">Todos</option>'].concat(uniq(key).map(v=>`<option value="${v.replace(/"/g,'&quot;')}">${v}</option>`)).join('');
+  const allLabel = key==='status_mat' ? 'Matriculado' : 'Todos';
+  let values = uniq(key);
+  if(key==='status_mat') values = values.filter(v=>v!=='Matriculado');
+  const opts=[`<option value="">${allLabel}</option>`].concat(values.map(v=>`<option value="${v.replace(/"/g,'&quot;')}">${v}</option>`)).join('');
   wrap.innerHTML=`<label for="f_${key}">${label}</label><select id="f_${key}">${opts}</select>`;
   fc.appendChild(wrap);
   wrap.querySelector('select').addEventListener('change',e=>{F[key]=e.target.value;render();});
